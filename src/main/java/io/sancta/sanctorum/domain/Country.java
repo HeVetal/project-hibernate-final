@@ -3,10 +3,15 @@ package io.sancta.sanctorum.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
+@Getter
+@Setter
 @Entity
 @Table(schema = "world", name = "country")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -21,6 +26,7 @@ public class Country {
 
     String name;
 
+    @Enumerated(EnumType.ORDINAL)
     Continent continent;
 
     String region;
@@ -36,10 +42,11 @@ public class Country {
     @Column(name = "life_expectancy")
     BigDecimal lifeExpectancy;
 
+    @Column(name = "gnp")
     BigDecimal GNP;
 
-    @Column(name = "gnpo_id")
-    BigDecimal GNPOId;
+    @Column(name = "gnp_opd")
+    BigDecimal GNPOld;
 
     @Column(name = "local_name")
     String localName;
@@ -53,4 +60,9 @@ public class Country {
     @OneToOne
     @Column(name = "capital")
     City city;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn()
+    Set<CountryLanguage> languages;
+
 }
