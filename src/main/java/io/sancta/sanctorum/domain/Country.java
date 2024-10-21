@@ -45,24 +45,24 @@ public class Country {
     @Column(name = "gnp")
     BigDecimal GNP;
 
-    @Column(name = "gnp_opd")
+    @Column(name = "gnp_old")
     BigDecimal GNPOld;
 
     @Column(name = "local_name")
     String localName;
 
-    @Column(name = "government_from")
+    @Column(name = "government_form")
     String governmentFrom;
 
     @Column(name = "head_of_state")
     String headOfState;
 
     @OneToOne
-    @Column(name = "capital")
+    @JoinColumn(name = "capital")
     City city;
 
     @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn()
+    @JoinColumn(name = "country_id")
     Set<CountryLanguage> languages;
 
 }
