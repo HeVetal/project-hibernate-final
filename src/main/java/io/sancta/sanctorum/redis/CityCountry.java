@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-//@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CityCountry {
     Integer id;
     String name;
