@@ -129,7 +129,7 @@ public class GeoControl {
                 ).toList();
     }
 
-    private void pushToRedis(List<CityCountry> data){
+    private void pushToRedis(List<CityCountry> data) {
         try (StatefulRedisConnection<String, String> connect = redisClient.connect()) {
             RedisCommands<String, String> sync = connect.sync();
             for (CityCountry cityCountry : data) {
@@ -140,6 +140,5 @@ public class GeoControl {
                 }
             }
         }
-
     }
 }
