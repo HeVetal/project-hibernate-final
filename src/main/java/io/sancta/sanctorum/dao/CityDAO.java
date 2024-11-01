@@ -15,7 +15,7 @@ public class CityDAO {
     SessionFactory sessionFactory;
 
     public List<City> getItems(int offset, int limit) {
-        String hql = "select c from City as c";
+        String hql = "select city from City as city";
         Query<City> query = sessionFactory.getCurrentSession().createQuery(hql, City.class);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
@@ -23,8 +23,15 @@ public class CityDAO {
     }
 
     public int getTotalCount() {
-        String hql = "select count(c) from City as c";
+        String hql = "select count(city) from City as city";
         Query<Long> query = sessionFactory.getCurrentSession().createQuery(hql, Long.class);
         return Math.toIntExact(query.uniqueResult());
+    }
+
+    public City getById(Integer id) {
+        String hql = "select city from City as city join fetch city.country where city.id = :ID";
+        Query<City> query = sessionFactory.getCurrentSession().createQuery(hql, City.class);
+        query.setParameter("ID", id);
+        return query.getSingleResult();
     }
 }
