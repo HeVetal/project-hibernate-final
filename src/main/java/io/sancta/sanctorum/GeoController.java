@@ -5,6 +5,7 @@ import io.sancta.sanctorum.dao.CountryDAO;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GeoController {
@@ -20,7 +21,7 @@ public class GeoController {
     }
 
     private SessionFactory prepareRelationalDataBase() {
-        return null;
+        return new Configuration().configure().buildSessionFactory();
     }
 
 }
