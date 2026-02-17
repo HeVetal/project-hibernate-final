@@ -1,11 +1,25 @@
 package io.sancta.sanctorum;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
 import io.sancta.sanctorum.dao.CityDAO;
 import io.sancta.sanctorum.dao.CountryDAO;
+import io.sancta.sanctorum.domain.City;
+import io.sancta.sanctorum.domain.Country;
+import io.sancta.sanctorum.redis.CityCountry;
+import io.sancta.sanctorum.redis.Language;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GeoController {
@@ -14,14 +28,86 @@ public class GeoController {
     CityDAO cityDAO;
     CountryDAO countryDAO;
 
+    RedisClient redisClient;
+
     public GeoController() {
         sessionFactory = prepareRelationalDataBase();
         cityDAO = new CityDAO(sessionFactory);
         countryDAO = new CountryDAO(sessionFactory);
+
+        redisClient = prepareRedisClient();
+    }
+
+    public void run() {
+        List<City> cities = fetchData();
+        List<CityCountry> cityCountries = transformDate(cities);
+
+        sessionFactory.getCurrentSession().close();
+
+        shutdown();
     }
 
     private SessionFactory prepareRelationalDataBase() {
         return new Configuration().configure().buildSessionFactory();
+    }
+
+    private RedisClient prepareRedisClient() {
+        RedisClient redisClient = RedisClient.create(RedisURI.create("localhost", 6379));
+
+        try (StatefulRedisConnection<String, String> connect = redisClient.connect()) {
+            System.out.println("Connect to redis");
+        }
+
+        return redisClient;
+    }
+
+    private void shutdown() {
+        if (Objects.nonNull(sessionFactory)) sessionFactory.close();
+
+        if (Objects.nonNull(redisClient)) redisClient.close();
+    }
+
+    private List<City> fetchData() {
+        List<City> allCity = new ArrayList<>();
+        try (Session session = sessionFactory.getCurrentSession()) {
+            session.beginTransaction();
+            List<Country> countries = countryDAO.getAll();
+            int totalCount = cityDAO.getTotalCount();
+            int step = 500;
+            for (int i = 0; i < totalCount; i = i + step) {
+                List<City> items = cityDAO.getItems(i, step);
+                allCity.addAll(items
+                );
+            }
+            session.getTransaction().commit();
+        }
+        return allCity;
+    }
+
+    private List<CityCountry> transformDate(List<City> cities) {
+        return cities.stream()
+                .map(city -> CityCountry.builder()
+                        .id(city.getId())
+                        .name(city.getName())
+                        .district(city.getDistrict())
+                        .population(city.getPopulation())
+                        .countryCode(city.getCountry().getCode())
+                        .alternativeCountryCode(city.getCountry().getAlternativeCode())
+                        .countryName(city.getCountry().getName())
+                        .continent(city.getCountry().getContinent())
+                        .region(city.getCountry().getRegion())
+                        .continentSurfaceArea(city.getCountry().getSurfaceArea())
+                        .countryPopulation(city.getCountry().getPopulation())
+                        .languages(city.getCountry().getLanguages().stream()
+                                .map(countrylanguage -> Language.builder()
+                                        .language(countrylanguage.getLanguage())
+                                        .isOfficial(countrylanguage.getIsOfficial())
+                                        .percentage(countrylanguage.getPercentage())
+                                        .build()
+                                )
+                                .collect(Collectors.toSet())
+                        ).build()
+                ).toList();
     }
 
 }
