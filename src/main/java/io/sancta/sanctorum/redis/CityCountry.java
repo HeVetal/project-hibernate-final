@@ -10,6 +10,7 @@ import java.util.Set;
 @Getter @Setter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class CityCountry {
 
     Integer id;
