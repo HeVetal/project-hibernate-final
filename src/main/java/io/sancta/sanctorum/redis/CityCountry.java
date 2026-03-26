@@ -11,6 +11,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
+@NoArgsConstructor
 public class CityCountry {
 
     Integer id;
@@ -29,8 +30,7 @@ public class CityCountry {
 
     Continent continent;
 
-
-    String region;
+    String countryRegion;
 
     BigDecimal continentSurfaceArea;
 

@@ -33,33 +33,34 @@ public class Country {
     String region;
 
 
-    @Column(name="surface_area")
+    @Column(name = "surface_area")
     BigDecimal surfaceArea;
 
-    @Column(name="indep_year")
+    @Column(name = "indep_year")
     Short independenceYear;
 
     Integer population;
 
-    @Column(name="life_expectancy")
+    @Column(name = "life_expectancy")
     BigDecimal lifeExpectancy;
 
-    BigDecimal gnp;
+    @Column(name = "gnp")
+    BigDecimal GNP;
 
-    @Column(name="gnp_old")
-    BigDecimal gnpOld;
+    @Column(name = "gnp_old")
+    BigDecimal GNPOld;
 
-    @Column(name="local_name")
+    @Column(name = "local_name")
     String localName;
 
-    @Column(name="government_form")
+    @Column(name = "government_form")
     String governmentForm;
 
     @Column(name = "head_of_state")
     String headOfState;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="capital")
+    @JoinColumn(name = "capital")
     City city;
 
     @OneToMany(fetch = FetchType.EAGER)

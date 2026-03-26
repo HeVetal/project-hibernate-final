@@ -1,7 +1,6 @@
 package io.sancta.sanctorum;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -33,8 +32,7 @@ public class GeoController {
     CountryDAO countryDAO;
 
     RedisClient redisClient;
-    ObjectMapper mapper;
-
+    Gson gson;
 
     public GeoController() {
         sessionFactory = prepareRelationalDataBase();
@@ -43,7 +41,9 @@ public class GeoController {
 
         redisClient = prepareRedisClient();
 
-        mapper = new ObjectMapper();
+        gson = new Gson().newBuilder()
+                .setPrettyPrinting()
+                .create();
     }
 
     public void run() {
@@ -109,7 +109,7 @@ public class GeoController {
         return allCity;
     }
 
-    private List<CityCountry> transformDate(List<City> cities) {
+    private List<CityCountry> transformDate(List<City> cities) { //mapStruct
         return cities.stream()
                 .map(city -> CityCountry.builder()
                         .id(city.getId())
@@ -120,7 +120,7 @@ public class GeoController {
                         .alternativeCountryCode(city.getCountry().getAlternativeCode())
                         .countryName(city.getCountry().getName())
                         .continent(city.getCountry().getContinent())
-                        .region(city.getCountry().getRegion())
+                        .countryRegion(city.getCountry().getRegion())
                         .continentSurfaceArea(city.getCountry().getSurfaceArea())
                         .countryPopulation(city.getCountry().getPopulation())
                         .languages(city.getCountry().getLanguages().stream()
@@ -139,30 +139,24 @@ public class GeoController {
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             RedisCommands<String, String> sync = connection.sync();
             for (CityCountry cityCountry : data) {
-                try {
-                    sync.set(String.valueOf(cityCountry.getId()), mapper.writeValueAsString(cityCountry));
-                } catch (JsonProcessingException e) {
-                    new RuntimeException(e);
-                }
+
+                sync.set(String.valueOf(cityCountry.getId()), gson.toJson(cityCountry));
             }
         }
     }
 
-    private void testRedisData(List<Integer> ids){
+
+    private void testRedisData(List<Integer> ids) {
         try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
             RedisCommands<String, String> sync = connection.sync();
             for (Integer id : ids) {
                 String value = sync.get(String.valueOf(id));
-                try {
-                    mapper.readValue(value, CityCountry.class);
-                } catch (JsonProcessingException e) {
-                    new RuntimeException(e);
-                }
+                    gson.fromJson(value, CityCountry.class);
             }
         }
     }
 
-    private void testMySqlDate(List<Integer> ids){
+    private void testMySqlDate(List<Integer> ids) {
         try (Session session = sessionFactory.getCurrentSession()) {
             session.beginTransaction();
             for (Integer id : ids) {
@@ -170,8 +164,6 @@ public class GeoController {
                 Set<CountryLanguage> languages = city.getCountry().getLanguages();
             }
             session.getTransaction().commit();
-
-
         }
     }
 }
